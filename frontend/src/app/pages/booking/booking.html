@@ -1,0 +1,28 @@
+<div style="padding: 24px; min-width: 400px;">
+      <h2 mat-dialog-title style="color: #082b71; font-weight: bold; margin-bottom: 20px;">
+        Book Ticket: {{ data.train.name }}
+      </h2>
+      <mat-dialog-content>
+        <div style="margin-bottom: 15px; color: #666;">
+          <p><strong>Train No:</strong> {{ data.train.number }}</p>
+          <p><strong>Departure:</strong> {{ data.train.departureTime }}</p>
+          <p><strong>Price:</strong> ₹500 (Fixed Fare)</p>
+        </div>
+
+        <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" style="display: flex; flex-direction: column;">
+          <mat-form-field appearance="outline">
+            <mat-label>Passenger Name</mat-label>
+            <input matInput formControlName="passengerName" required>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Passenger Age</mat-label>
+            <input matInput formControlName="passengerAge" type="number" required>
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="!bookingForm.valid" style="background-color: #fb792b; color: white; padding: 10px 0; font-size: 16px;">
+            PAY ₹500 & BOOK
+          </button>
+        </form>
+      </mat-dialog-content>
+    </div>

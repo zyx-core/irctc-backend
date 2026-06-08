@@ -1,0 +1,22 @@
+<div style="padding: 24px; min-width: 400px;">
+      <h2 mat-dialog-title style="color: #082b71; font-weight: bold; margin-bottom: 20px;">
+        Cancel E-Ticket
+      </h2>
+      <mat-dialog-content>
+        <p style="color: #d32f2f; margin-bottom: 20px;">
+          Note: A cancellation charge of ₹100 will be deducted. The remaining ₹400 will be refunded to your E-Wallet.
+        </p>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <mat-form-field appearance="outline" style="flex: 1;">
+            <mat-label>Enter PNR Number to Cancel</mat-label>
+            <input matInput [(ngModel)]="pnr" placeholder="10-digit PNR">
+          </mat-form-field>
+          <button mat-flat-button color="warn" (click)="cancelPnr()" [disabled]="!pnr" style="margin-top: 4px; height: 50px;">
+            Cancel Ticket
+          </button>
+        </div>
+      </mat-dialog-content>
+      <mat-dialog-actions style="justify-content: flex-end;">
+        <button mat-button (click)="dialogRef.close()">Close</button>
+      </mat-dialog-actions>
+    </div>

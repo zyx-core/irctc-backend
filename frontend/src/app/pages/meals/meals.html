@@ -1,0 +1,60 @@
+<div style="padding: 24px; min-width: 500px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+      <h2 mat-dialog-title style="color: #082b71; font-weight: bold; margin-bottom: 20px;">
+        Order E-Catering (Meals on Train)
+      </h2>
+      <mat-dialog-content>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <mat-form-field appearance="outline" style="flex: 1;">
+            <mat-label>Enter 10-digit PNR</mat-label>
+            <input matInput [(ngModel)]="pnr" placeholder="Your Confirmed PNR">
+          </mat-form-field>
+          <button mat-flat-button color="accent" (click)="trackMeals()" style="background-color: #fb792b; color: white; margin-top: 8px; height: 40px;">
+            Track Orders
+          </button>
+        </div>
+
+        <div *ngIf="trackingError" style="color: red; margin-bottom: 15px; font-size: 13px;">{{ trackingError }}</div>
+
+        <div *ngIf="mealOrders.length > 0" style="margin-bottom: 30px;">
+          <h3 style="color: #082b71;">Your Orders</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <mat-card *ngFor="let order of mealOrders" style="background: #f9f9f9; border-left: 4px solid #082b71;">
+              <mat-card-content style="padding: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <strong>{{ order.meal.name }}</strong> (x{{ order.quantity }})
+                    <div style="font-size: 12px; color: #666;">Ordered: {{ order.orderDate | date:'medium' }}</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-weight: bold; color: #082b71;">Status: {{ order.status }}</div>
+                    <div style="font-weight: bold; color: #fb792b;">Total: ₹{{ order.meal.price * order.quantity }}</div>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+
+        <h3 style="color: #082b71;">Available Menu</h3>
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+          <mat-card *ngFor="let meal of menu" style="border: 1px solid #ddd; box-shadow: none;">
+            <mat-card-content style="display: flex; justify-content: space-between; align-items: center; padding: 15px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                  <span [style.background]="meal.type === 'VEG' ? 'green' : 'red'" style="width: 10px; height: 10px; border-radius: 50%; display: inline-block;"></span>
+                  <strong style="font-size: 16px;">{{ meal.name }}</strong>
+                </div>
+                <p style="margin: 0; color: #666; font-size: 13px;">{{ meal.description }}</p>
+                <p style="margin: 5px 0 0; color: #fb792b; font-weight: bold;">₹{{ meal.price }}</p>
+              </div>
+              <button mat-flat-button color="primary" (click)="orderMeal(meal)" [disabled]="!pnr" style="background-color: #082b71;">
+                Order
+              </button>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-dialog-content>
+      <mat-dialog-actions style="justify-content: flex-end; margin-top: 20px;">
+        <button mat-button (click)="dialogRef.close()">Close</button>
+      </mat-dialog-actions>
+    </div>

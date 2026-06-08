@@ -1,0 +1,177 @@
+<div class="full-width-bg" style="position: relative; width: 100%; padding: 40px 0; min-height: 640px;">
+  <!-- IRCTC Vande Bharat Background -->
+  <div class="step bannerImg banner" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 0; background-position: center; background-size: cover;"></div>
+  
+  <div class="main-grid-container" style="position: relative; z-index: 1;">
+    
+    <!-- LEFT COLUMN -->
+    <div class="left-column">
+      <div class="train-search-card" style="background: white; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
+        
+        <!-- Top Action Buttons Grid -->
+        <div *ngIf="isLoggedIn" style="display: grid; grid-template-columns: 1fr 1fr; background: #0f2963; color: white;">
+          <div (click)="openPnrStatus()" style="padding: 12px; text-align: center; border-right: 1px solid #1a3c7c; border-bottom: 1px solid #1a3c7c; cursor: pointer; font-size: 14px; font-weight: bold;"><i class="fa fa-check-square-o"></i> PNR STATUS</div>
+          <div (click)="openCharts()" style="padding: 12px; text-align: center; border-bottom: 1px solid #1a3c7c; cursor: pointer; font-size: 14px; font-weight: bold;"><i class="fa fa-server"></i> CHARTS / VACANCY</div>
+          <div (click)="openRefundStatus()" style="padding: 12px; text-align: center; border-right: 1px solid #1a3c7c; cursor: pointer; font-size: 14px; font-weight: bold;"><i class="fa fa-inr"></i> Refund Status</div>
+          <div (click)="rebookJourney()" style="padding: 12px; text-align: center; cursor: pointer; font-size: 14px; font-weight: bold;"><i class="fa fa-map-marker"></i> Re-Book Favourite Journey</div>
+        </div>
+
+        <div style="padding: 20px;">
+          <!-- Green notification -->
+          <div *ngIf="isLoggedIn" style="color: #2e7d32; font-size: 13px; text-align: center; margin-bottom: 20px; font-weight: bold;">
+            Aadhaar authentication of IRCTC user profile is mandatory to book Tatkal and Premium Tatkal tickets.
+          </div>
+          
+          <h2 style="color: #0f2963; text-align: center; font-weight: 800; font-size: 28px; margin-bottom: 25px; margin-top: 0;">
+            BOOK TICKET
+          </h2>
+          
+          <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+            <div style="display: flex; gap: 15px; align-items: flex-start; margin-bottom: 15px;">
+              <mat-form-field appearance="outline" style="flex: 1; margin: 0; padding: 0;">
+                <mat-label>From</mat-label>
+                <mat-icon matPrefix>location_on</mat-icon>
+                <input type="text" matInput formControlName="origin" placeholder="Enter From station" [matAutocomplete]="autoOrigin">
+                <mat-autocomplete #autoOrigin="matAutocomplete">
+                  <mat-option *ngFor="let station of filteredOriginStations | async" [value]="station.code">
+                    {{station.name}} - {{station.code}}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+              
+              <button type="button" mat-icon-button (click)="swapStations()" style="background: #f57f17; color: white; margin-top: 5px; width: 40px; height: 40px; border-radius: 50%;">
+                <mat-icon>swap_horiz</mat-icon>
+              </button>
+
+              <mat-form-field appearance="outline" style="flex: 1; margin: 0; padding: 0;">
+                <mat-label>To</mat-label>
+                <mat-icon matPrefix>location_on</mat-icon>
+                <input type="text" matInput formControlName="destination" placeholder="Enter To station" [matAutocomplete]="autoDest">
+                <mat-autocomplete #autoDest="matAutocomplete">
+                  <mat-option *ngFor="let station of filteredDestStations | async" [value]="station.code">
+                    {{station.name}} - {{station.code}}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+            </div>
+
+            <div style="display: flex; gap: 15px; align-items: flex-start; margin-bottom: 15px;">
+              <mat-form-field appearance="outline" style="flex: 1; margin: 0; padding: 0;">
+                <mat-label>Journey Date</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="journeyDate">
+                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" style="flex: 1; margin: 0; padding: 0;">
+                <mat-label>Class</mat-label>
+                <mat-icon matPrefix>class</mat-icon>
+                <mat-select formControlName="journeyClass">
+                  <mat-option *ngFor="let cls of classes" [value]="cls">{{cls}}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div style="display: flex; gap: 15px; align-items: flex-start; margin-bottom: 15px;">
+              <mat-form-field appearance="outline" style="flex: 1; margin: 0; padding: 0;">
+                <mat-label>Quota</mat-label>
+                <mat-icon matPrefix>category</mat-icon>
+                <mat-select formControlName="journeyQuota">
+                  <mat-option *ngFor="let q of quotas" [value]="q">{{q}}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px; color: #0f2963; font-weight: bold; font-size: 13px;">
+              <label style="cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0;"><input type="checkbox" formControlName="concessionBooking"> Person With Disability Concession</label>
+              <label style="cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0;"><input type="checkbox" formControlName="dateSpecific"> Flexible With Date</label>
+              <label style="cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0;"><input type="checkbox" formControlName="passBooking"> Railway Pass Concession</label>
+            </div>
+
+            <div style="text-align: center; margin-top: 10px;">
+              <button type="submit" mat-flat-button style="background: #f57f17; color: white; padding: 10px 40px; font-size: 18px; font-weight: bold; border-radius: 4px; min-width: 200px;">
+                Search Trains
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+      <div *ngIf="!isLoggedIn" style="text-align: right; padding-top: 20px;">
+        <div style="color: #0f2963; margin: 0; font-size: 56px; font-weight: 800; line-height: 1.1;">INDIAN RAILWAYS</div>
+        <div style="color: #0f2963; font-size: 26px;">Safety | Security | Punctuality</div>
+      </div>
+
+      <div *ngIf="isLoggedIn" style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Card A: Last Transaction Detail -->
+        <div style="background: white; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+          <div style="background: #0f2963; color: white; padding: 12px 20px; font-weight: bold; font-size: 16px;">
+            Last Transaction Detail
+          </div>
+          <div style="padding: 40px 20px; text-align: center; font-size: 15px; color: #333; background: white;">
+            <div *ngIf="lastTransaction">
+              <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">{{lastTransaction.train.sourceStation.name}} &rarr; {{lastTransaction.train.destinationStation.name}}</div>
+              <div style="margin-bottom: 5px;"><strong>PNR:</strong> {{lastTransaction.pnr}}</div>
+              <div style="margin-bottom: 5px;"><strong>Status:</strong> <span [style.color]="lastTransaction.status === 'CONFIRMED' ? 'green' : 'red'">{{lastTransaction.status}}</span></div>
+              <div style="font-size: 13px; color: #666;">Booked on: {{lastTransaction.bookingDate | date}}</div>
+            </div>
+            <div *ngIf="!lastTransaction">
+              No last transaction
+            </div>
+          </div>
+        </div>
+
+        <!-- Card B: Upcoming Journey -->
+        <div style="background: white; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #0f2963; color: white; padding: 12px 20px;">
+            <span style="font-weight: bold; font-size: 16px;">Upcoming Journey</span>
+            <span style="font-size: 13px; cursor: pointer; text-decoration: underline;">View All Journeys</span>
+          </div>
+          <div style="padding: 40px 20px; text-align: center; font-size: 15px; color: #333; min-height: 250px; background: white;">
+            <div *ngIf="upcomingJourney">
+              <div style="font-weight: bold; font-size: 20px; color: #f57f17; margin-bottom: 10px;">{{upcomingJourney.train.sourceStation.code}} &rarr; {{upcomingJourney.train.destinationStation.code}}</div>
+              <div style="font-weight: bold; margin-bottom: 5px;">{{upcomingJourney.train.name}} ({{upcomingJourney.train.number}})</div>
+              <div style="margin-bottom: 15px;">Departure: {{upcomingJourney.train.departureTime}}</div>
+              <button mat-flat-button style="background: #0f2963; color: white;" (click)="viewJourneyDetails(upcomingJourney.pnr)">View Details</button>
+            </div>
+            <div *ngIf="!upcomingJourney">
+              No upcoming journeys
+            </div>
+            <div style="margin-top: 30px; display: flex; justify-content: center; align-items: center; background: #f9f9f9; border: 1px dashed #ccc; height: 100px; color: #888; font-size: 12px;">
+               Space for Advertisements
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="train-results" *ngIf="searchResults.length > 0" class="col-xs-12" style="max-width: 1200px; margin: 40px auto; padding: 20px;">
+  <h3 class="heading-font" style="color: #0f2963; text-align: center; font-weight: bold;">Train Results</h3>
+  <table class="table table-bordered table-striped" style="background: white; border-radius: 8px; width: 100%; border-collapse: collapse; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+    <thead style="background: #f57f17; color: white;">
+      <tr>
+        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Train Name</th>
+        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Train No.</th>
+        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Departure</th>
+        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Arrival</th>
+        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let train of searchResults">
+        <td style="padding: 12px; border: 1px solid #ddd;">{{train.name}}</td>
+        <td style="padding: 12px; border: 1px solid #ddd;">{{train.number}}</td>
+        <td style="padding: 12px; border: 1px solid #ddd;">{{train.departureTime}}</td>
+        <td style="padding: 12px; border: 1px solid #ddd;">{{train.arrivalTime}}</td>
+        <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">
+          <button mat-flat-button color="primary" (click)="openBooking(train)" style="background: #f57f17; color: white;">Book Now</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

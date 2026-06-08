@@ -1,0 +1,179 @@
+<div class="admin-container">
+  <!-- Sidebar -->
+  <div class="admin-sidebar">
+    <div class="sidebar-header">
+      <i class="fa fa-cogs"></i> IRCTC Admin Panel
+    </div>
+    <ul class="sidebar-menu">
+      <li [class.active]="activeTab === 'dashboard'" (click)="setTab('dashboard')"><i class="fa fa-dashboard"></i> Dashboard</li>
+      <li [class.active]="activeTab === 'trains'" (click)="setTab('trains')"><i class="fa fa-train"></i> Manage Trains</li>
+      <li [class.active]="activeTab === 'tickets'" (click)="setTab('tickets')"><i class="fa fa-ticket"></i> All Bookings</li>
+      <li [class.active]="activeTab === 'users'" (click)="setTab('users')"><i class="fa fa-users"></i> Registered Users</li>
+      <li [class.active]="activeTab === 'pantry'" (click)="setTab('pantry')"><i class="fa fa-cutlery"></i> Pantry</li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="admin-content">
+    <div *ngIf="loading" class="loading-overlay">
+      <i class="fa fa-spinner fa-spin fa-3x"></i>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div *ngIf="activeTab === 'dashboard' && stats">
+      <h2>System Overview</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #4CAF50;"><i class="fa fa-users"></i></div>
+          <div class="stat-details">
+            <div class="stat-title">Total Users</div>
+            <div class="stat-value">{{stats.totalUsers}}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #2196F3;"><i class="fa fa-train"></i></div>
+          <div class="stat-details">
+            <div class="stat-title">Total Trains</div>
+            <div class="stat-value">{{stats.totalTrains}}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #FF9800;"><i class="fa fa-ticket"></i></div>
+          <div class="stat-details">
+            <div class="stat-title">Total Tickets Booked</div>
+            <div class="stat-value">{{stats.totalTickets}}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #9C27B0;"><i class="fa fa-inr"></i></div>
+          <div class="stat-details">
+            <div class="stat-title">Total Wallet Balance</div>
+            <div class="stat-value">₹{{stats.totalRevenue}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trains Tab -->
+    <div *ngIf="activeTab === 'trains'">
+      <h2>Manage Trains</h2>
+      <button class="btn btn-primary" style="margin-bottom: 20px;" (click)="showAlert('Add train modal coming soon!')"><i class="fa fa-plus"></i> Add New Train</button>
+      <table class="table table-bordered table-striped" style="background: white;">
+        <thead style="background: #0f2963; color: white;">
+          <tr>
+            <th>ID</th>
+            <th>Number</th>
+            <th>Name</th>
+            <th>Source</th>
+            <th>Destination</th>
+            <th>Departs</th>
+            <th>Arrives</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of trains | slice:0:50">
+            <td>{{t.id}}</td>
+            <td>{{t.number}}</td>
+            <td>{{t.name}}</td>
+            <td>{{t.sourceStation?.name}} ({{t.sourceStation?.code}})</td>
+            <td>{{t.destinationStation?.name}} ({{t.destinationStation?.code}})</td>
+            <td>{{t.departureTime}}</td>
+            <td>{{t.arrivalTime}}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" (click)="deleteTrain(t.id)"><i class="fa fa-trash"></i> Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tickets Tab -->
+    <div *ngIf="activeTab === 'tickets'">
+      <h2>All Bookings</h2>
+      <table class="table table-bordered table-striped" style="background: white;">
+        <thead style="background: #0f2963; color: white;">
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>PNR</th>
+            <th>Passenger</th>
+            <th>Train</th>
+            <th>Route</th>
+            <th>Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of tickets | slice:0:50">
+            <td>{{t.id}}</td>
+            <td>{{t.user}}</td>
+            <td>{{t.pnr}}</td>
+            <td>{{t.passengerName}} ({{t.passengerAge}})</td>
+            <td>{{t.train}}</td>
+            <td>{{t.route}}</td>
+            <td>{{t.bookingDate | date:'short'}}</td>
+            <td><span class="label" [ngClass]="t.status === 'CONFIRMED' ? 'label-success' : 'label-warning'">{{t.status}}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Users Tab -->
+    <div *ngIf="activeTab === 'users'">
+      <h2>Registered Users</h2>
+      <table class="table table-bordered table-striped" style="background: white;">
+        <thead style="background: #0f2963; color: white;">
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Wallet Balance</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of users | slice:0:50">
+            <td>{{u.id}}</td>
+            <td>{{u.username}}</td>
+            <td>{{u.fullName}}</td>
+            <td>{{u.email}}</td>
+            <td>₹{{u.walletBalance}}</td>
+            <td><span class="label" [ngClass]="u.isAdmin ? 'label-danger' : 'label-primary'">{{u.isAdmin ? 'Admin' : 'User'}}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pantry Tab -->
+    <div *ngIf="activeTab === 'pantry'">
+      <h2>Pantry / Food Orders</h2>
+      <table class="table table-bordered table-striped" style="background: white;">
+        <thead style="background: #0f2963; color: white;">
+          <tr>
+            <th>Order ID</th>
+            <th>PNR</th>
+            <th>Meal</th>
+            <th>Quantity</th>
+            <th>Total Price</th>
+            <th>Order Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let o of pantryOrders">
+            <td>{{o.id}}</td>
+            <td>{{o.pnr}}</td>
+            <td>{{o.mealName}}</td>
+            <td>{{o.quantity}}</td>
+            <td>₹{{o.totalPrice}}</td>
+            <td>{{o.orderDate | date:'short'}}</td>
+            <td><span class="label" [ngClass]="o.status === 'PREPARING' ? 'label-warning' : 'label-success'">{{o.status}}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>

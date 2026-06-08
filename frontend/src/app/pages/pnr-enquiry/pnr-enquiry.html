@@ -1,0 +1,34 @@
+<div style="padding: 24px; min-width: 400px;">
+      <h2 mat-dialog-title style="color: #082b71; font-weight: bold; margin-bottom: 20px;">
+        PNR Enquiry
+      </h2>
+      <mat-dialog-content>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <mat-form-field appearance="outline" style="flex: 1;">
+            <mat-label>Enter PNR Number</mat-label>
+            <input matInput [(ngModel)]="pnr" placeholder="10-digit PNR">
+          </mat-form-field>
+          <button mat-flat-button color="primary" (click)="checkPnr()" [disabled]="!pnr" style="background-color: #fb792b; margin-top: 4px; height: 50px;">
+            Search
+          </button>
+        </div>
+
+        <div *ngIf="result" style="background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+          <h4 style="color: #082b71; margin-top: 0;">Ticket Details</h4>
+          <p><strong>PNR:</strong> {{ result.pnr }}</p>
+          <p><strong>Status:</strong> 
+            <span [style.color]="result.status === 'CONFIRMED' ? 'green' : 'red'">
+              <b>{{ result.status }}</b>
+            </span>
+          </p>
+          <p><strong>Passenger:</strong> {{ result.passengerName }} (Age: {{ result.passengerAge }})</p>
+          <p><strong>Train:</strong> {{ result.train?.number }} - {{ result.train?.name }}</p>
+          <p><strong>From:</strong> {{ result.train?.sourceStation?.name }} ({{ result.train?.departureTime }})</p>
+          <p><strong>To:</strong> {{ result.train?.destinationStation?.name }} ({{ result.train?.arrivalTime }})</p>
+          <p><strong>Booked On:</strong> {{ result.bookingDate | date:'medium' }}</p>
+        </div>
+      </mat-dialog-content>
+      <mat-dialog-actions style="justify-content: flex-end;">
+        <button mat-button (click)="dialogRef.close()">Close</button>
+      </mat-dialog-actions>
+    </div>

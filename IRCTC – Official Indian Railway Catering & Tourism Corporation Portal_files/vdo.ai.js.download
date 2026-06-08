@@ -1,0 +1,452 @@
+/*05-Jun-2026 03:34:10*/(function () {
+  var unitLevelEvents = ["loaded", "pageview_match", "pageview"];
+  var iframeServed = false;
+  var vdo_min_loaded_once = false;
+  window.display_ai_units = window.display_ai_units || {};
+
+  function getQueryParam(url, param) {
+    const urlObj = new URL(url);
+    return urlObj.searchParams.get(param);
+  }
+
+  var adframeConfig = {"display_slots":[{"slot_show":true,"slot_size":"300x250","slot_device":["desktop","mobile"],"slot_position":"ATF","slot_ad_sizes":[[300,250]],"placement_id":["\/22100121508,21748009408\/DFP_APAC_Parent_First_AdBreak_Display\/ellipsis_dfp_b_irctc_co_in_300x250_ATF_1_1"],"ibv_linked_tag_slot":true,"slot_div_id":"b_irctc_co_in_300x250_ATF_168ecbf55ad463"},{"slot_show":true,"slot_size":"320x50","slot_device":["desktop","mobile"],"slot_position":"ATF","slot_ad_sizes":[[320,50]],"placement_id":["\/22100121508,21748009408\/DFP_APAC_Parent_First_AdBreak_Display\/ellipsis_dfp_b_irctc_co_in_320x50_ATF_2_1"],"ibv_linked_tag_slot":false,"slot_div_id":"b_irctc_co_in_320x50_ATF_268ecbf55ad467"}],"refresh_targeting":[{"geos":["JP","GB","SA","NL","NZ","CA","SG","US","AE","AU","QA"],"time":30}],"display_slot_targeting":{"include":["JP","GB","SA","NL","NZ","CA","SG","US","AE","AU","IE","QA"]},"tagname":"b-irctc-co-in","ibv_linked_tag_flag":false,"ibv_linked_tag":"v-irctc-co-in-ibv","tag_exclusion":{"exclude_mcm":false,"exclude_mcm_apac":false},"tag":"b-irctc-co-in","timestamp":1780655650,"b_domain":true,"agent":false,"playlist_id":null,"realParentDiv":null,"static_vpmute":true,"svpm_excluded_partners":null,"wid":8405,"unit_id":34174,"allowed_dims":0,"dependency":"dependencies_vdodev_974","pubId_vdo":"2716","pubId_atlas":"2716","pubId_wc":"4552","pubId_jj":"","pubId_adsolut":"","pubId_hs":"","pubId":"4552","showLogo":true,"close_after_first_ad_timer":0,"parent_div":"","unitId":"_vdo_ads_player_ai_34174","path":"\/\/a.vdo.ai\/core\/b-irctc-co-in\/adframe.js","ga_event":true,"use_global_hls":false,"tagType":"banner","tag_type":"Hardcode (v2)","category":"news","google_mcm":"21748009408","google_mcm_apac":"21748009408","domain":"irctc.co.in","bidders":[{"banner":{"prebid":[{"bidder":"kueezrtb","params":{"pId":"65lk7c192882r0011813fn9","cId":"682c84e4f19c1eb401373a81"}},{"bidder":"rubicon","params":{"accountId":27408,"siteId":593348,"zoneId":3790986}},{"bidder":"smilewanted","params":{"zoneId":"vdo.ai_hb_display_1"}},{"bidder":"unruly","params":{"siteId":274741}}]}}],"targeting":[],"adx":[[{"name":"Magnite","placement_id":{"rp_site":"615461","rp_zonesize":"3981963"}},{"name":"Incrementx","placement_id":"banner.incrementxserv.com\/scripts\/pageads.js?vzId=IXC132450VF8HDC4"}]],"s2s":false,"overflow_size":false,"handle_url_change":true,"style":"","ver":"v6.6.3","vast":null,"companionBanner":{"google_mcm":{"placement":"","upr":""},"gtr":{"include":["RO","GB","CA","DE","US","AE","AU"]},"rgtr":[{"geos":["RO","GB","CA","DE","US","AE","AU"],"time":30}]},"nonLinearBanner":{"google_mcm":{"placement":"","upr":""},"gtr":{"include":["BE","BG","BR","RO","JP","GB","HU","PT","PL","ZA","SA","ES","FR","FI","NL","NO","NZ","CH","CA","SK","KR","SE","DK","DE","US","AE","IS","AU","AT","IE"]}}};
+
+  const currentScriptSrc = document.currentScript.src;
+  var szValue;
+  if (currentScriptSrc.includes("slot_size")) {
+    szValue = getQueryParam(currentScriptSrc, "slot_size");
+  }
+
+  if (
+    !szValue &&
+    window.display_ai_units &&
+    window.display_ai_units[adframeConfig.tagname]
+  )
+    return;
+  window.display_ai_units[adframeConfig.tagname] = [];
+
+  logNewPixel("loaded", undefined, adframeConfig.tagname);
+
+  ///////// Analytics code
+  var vdo_analyticsID = "G-8J9SC9WB3T";
+  (function (v, d, o, ai) {
+    ai = d.createElement("script");
+    ai.async = true;
+    ai.src = o;
+    d.head.appendChild(ai);
+  })(
+    window,
+    document,
+    "https://www.googletagmanager.com/gtag/js?id=" + vdo_analyticsID
+  );
+
+  function vdo_analytics() {
+    window.dataLayer.push(arguments);
+  }
+  (function () {
+    window.dataLayer = window.dataLayer || [];
+    vdo_analytics("js", new Date());
+  })();
+  vdo_analytics("event", "loaded", {
+    send_to: vdo_analyticsID,
+    event_category: "vdoaijs",
+    event_label: adframeConfig.tagname,
+  });
+
+  window.display_ai_ = window.display_ai_ || {};
+
+  ////// Logpixel events code
+
+  Error.prototype.getMessage = function () {
+    "use strict";
+
+    var obj = Object(this);
+    if (obj !== this) {
+      return "getMessageError";
+    }
+
+    var name = this.name;
+    name = name === undefined ? "Error" : String(name);
+
+    var msg = this.message;
+    msg = msg === undefined ? "" : String(msg);
+
+    if (name === "") {
+      return msg;
+    }
+    if (msg === "") {
+      return name;
+    }
+
+    return msg;
+  };
+
+  Error.prototype.getStack = function () {
+    "use strict";
+
+    var obj = Object(this);
+    if (obj !== this) {
+      return "getStackError";
+    }
+
+    var stack = this.stack;
+    stack = stack === undefined ? "Error" : String(stack);
+
+    return stack;
+  };
+
+  function logError(e, tagname) {
+    if (typeof e === "string") {
+      e = {
+        message: e,
+        stack: e,
+      };
+    } else {
+      e = {
+        message: btoa(e.message).substr(0, 10),
+        stack: encodeURIComponent(e.stack),
+      };
+    }
+    vdo_analytics("event", "Err:" + e.message, {
+      send_to: vdo_analyticsID,
+      event_label: tagname,
+      event_category: "VDOBannerError",
+    });
+    var oReq = new XMLHttpRequest();
+    oReq.open(
+      "get",
+      "//a.vdo.ai/core/logger.php?msg=" +
+      e.stack +
+      "&tag=" +
+      tagname +
+      "&code=" +
+      e.message +
+      "&url=" +
+      encodeURIComponent(location.href) +
+      "&func=vdo.ai.js",
+      true
+    );
+    oReq.send();
+    logNewPixel("error", e.message, adframeConfig.tagname);
+  }
+
+  function logNewPixel(eventName, eventValue, tagName) {
+    window.display_ai_ = window.display_ai_ || {};
+    window.display_ai_.records = window.display_ai_.records || {};
+    if (unitLevelEvents.indexOf(eventName) >= 0) {
+      window.display_ai_.records[tagName] =
+        window.display_ai_.records[tagName] || {};
+      if (window.display_ai_.records[tagName][eventName]) {
+        return;
+      }
+      window.display_ai_.records[tagName][eventName] = true;
+    }
+
+    var requestObject;
+
+    requestObject = eventValue;
+
+    if (typeof requestObject == "undefined") {
+      requestObject = 1;
+    }
+    try {
+      if (window.self !== window.top) topWindowUrl = window.top.location.href;
+      else topWindowUrl = location.href;
+    } catch (error) {
+      topWindowUrl = location.href;
+    }
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "https://analytics.vdo.ai/logger", true);
+
+      var requestObject = {
+        domainName: adframeConfig.domain,
+        page_url: topWindowUrl,
+        tagName: tagName,
+        event: eventName,
+        eventData: requestObject,
+        dep: "dependencies_vdodev_974"
+      };
+      xhr.send(JSON.stringify(requestObject));
+    } catch (error) {
+      logError(error, "Fm-analytics");
+      logNewPixel(
+        "error",
+        btoa(error.getMessage()).substr(0, 10),
+        adframeConfig.tagname
+      );
+    }
+  }
+
+  try {
+    function insideSafeFrame() {
+      try {
+        if (top.location.href) {
+          return false;
+        }
+      } catch (error) {
+        return true;
+      }
+    }
+
+    function inIframe() {
+      try {
+        return self !== top;
+      } catch (r) {
+        return !0;
+      }
+    }
+    function findIframeContainingSelf() {
+      let selfParent = self; 
+      try {
+          for (let i = 0; i <= 5; i++) {
+            if(i == 5) {
+              console.log('Display Error : ',"nested iframes allowed upto 5."); 
+            }else{ 
+              if (selfParent.parent === top) return selfParent;
+              else selfParent = selfParent.parent;
+            }
+          }
+      } catch (e) {
+          logError(e, adframeConfig.tagname)
+      }
+    }
+    var iframe_Burst = inIframe() ? (insideSafeFrame() ? false : true) : false;
+    var w_vdo = insideSafeFrame() ? window : window.top,
+      d_vdo = w_vdo.document;
+    (function (window, document, deps, publisher) {
+      function loadBannerDiv(id, placement_Ids, iframeBurst = false) {
+        window.display_ai_ = window.display_ai_ || {};
+        window.display_ai_.cmd = window.display_ai_.cmd || [];
+        if (!iframeBurst) {
+          for (i = 0; i < placement_Ids.length; i++) {
+            try {
+              var s = document.createElement("div");
+              s.classList = id;
+              s.style.cssText =
+                "display: flex; align-items: center; text-align: center; width: 100%;justify-content: center; position: relative; margin-bottom:10px;";
+              document.querySelector("#" + placement_Ids[i]).appendChild(s);
+            } catch (error) {
+              logError("missing parent div:- " + placement_Ids[i], adframeConfig.tagname);
+            }
+          }
+        } else {
+          iframeServed = true;
+          var targetIframe = findIframeContainingSelf();
+          var el = targetIframe && targetIframe.frameElement;
+          if (el) {
+            if (!top.document.getElementById(placement_Ids[0])) {
+              // here you can create an expandable ad
+              var s = document.createElement("div");
+              s.style.cssText =
+                "display: flex; align-items: center; text-align: center; width: 100%;justify-content: center; position: relative; margin: 0 auto;";
+              s.classList = id;
+              var googleDiv = el.parentNode;
+              if (placement_Ids[0] != "") {
+                var parentDiv = document.createElement("div");
+                parentDiv.id = placement_Ids[0];
+                parentDiv.style.display = "block";
+                parentDiv.style.width = "100%";
+                parentDiv.style.marginBottom = "10px";
+                parentDiv.appendChild(s);
+                googleDiv.insertBefore(parentDiv, el);
+              } else {
+                googleDiv.insertBefore(s, el);
+              }
+              googleDiv.style.width = "auto";
+              googleDiv.parentNode.style.width = "auto";
+              googleDiv.parentNode.style.height = "auto";
+              el.style.height = "0px";
+              el.style.width = "0px";
+            }   
+          }
+        }
+      }
+
+      function loadScriptSync(src, id) {
+        return new Promise(function (resolve, reject) {
+          if (
+            src.indexOf("vdo.min.js") > 0 &&
+            document.querySelector(
+              "script[src*='" + adframeConfig.dependency + "/vdo.min.js']"
+            )
+          ) {
+             if (!window.initVdoDisplay) {
+              document
+                .querySelector(
+                  "script[src*='" + adframeConfig.dependency + "/vdo.min.js']"
+                )
+                .addEventListener("load", () => {
+                  resolve();
+                });
+            } else {
+              resolve();
+            }
+            return false;
+          }
+
+          var s = document.createElement("script");
+          s.id = id;
+          s.async = true;
+          s.src =
+            (src.indexOf("gpt.js") >= 0 ? "https:" : window.location.protocol) +
+            src;
+          document.body.appendChild(s);
+          var timestamp = Date.now();
+
+          s.onload = function (e) {
+            vdo_analytics("event", "timing_complete", {
+              name:
+                "load_" +
+                (src.indexOf("vdo.min.js") >= 0 ? "vdo.min.js" : "gpt.js"),
+              value: Date.now() - timestamp,
+              event_category: "display",
+              send_to: vdo_analyticsID,
+              event_label: adframeConfig.tagname,
+            });
+
+            resolve();
+          };
+        });
+      }
+
+      function startBannerTag(version) {
+        const placement_Ids = [];
+        var oncePlacementIdPushed = false;
+        for (i = 0; i < adframeConfig.display_slots.length; i++) {
+          if (
+            adframeConfig.display_slots[i].slot_show == true &&
+            adframeConfig.display_slots[i].slot_div_id != ""
+          ) {
+            if (!szValue) {
+              placement_Ids.push(adframeConfig.display_slots[i].slot_div_id);
+            } else if (szValue) {
+              if (adframeConfig.display_slots[i].slot_size == szValue) {
+                var divCretatedAlready = document.querySelector('#'+ adframeConfig.display_slots[i].slot_div_id);
+                if(!divCretatedAlready) { placement_Ids.push(adframeConfig.display_slots[i].slot_div_id); oncePlacementIdPushed = true;}
+                if(oncePlacementIdPushed) break;
+              }
+            }
+          }
+        }
+
+        if (placement_Ids.length)
+          loadBannerDiv("vdo_ad_wrapper", placement_Ids, iframe_Burst);
+        else return;
+
+        Promise.all([
+          loadScriptSync(
+            deps + adframeConfig.dependency + "/vdo.min.js?v=" +
+            (typeof version === "undefined" ? "" : version),
+            "display_standard_min"
+          ),
+          loadScriptSync(
+            "//securepubads.g.doubleclick.net/tag/js/gpt.js",
+            "display_standard_gpt"
+          ),
+        ])
+          .then(function () {
+            if (!vdo_min_loaded_once)
+              window.initVdoDisplay(adframeConfig, iframeServed, szValue);
+          })
+          .catch(function (e) {
+            if (e.target) {
+              var msg = "error_vdo.min.js";
+            } else {
+              var msg = e;
+            }
+            logError(msg, adframeConfig.tagname);
+          });
+      }
+
+      //////// Allowed url code
+
+      var current_url = location.host + location.pathname;
+      current_url = current_url
+        .replace(/(\/*)$/, "")
+        .replace(/^(?:https?:\/\/)?(?:www\.)?/i, "");
+      var failsafeCheck = false;
+      var oReq = new XMLHttpRequest();
+      oReq.onload = function () {
+        vdo_analytics("event", "timing_complete", {
+          name: "load_allowed_url.php",
+          value: Date.now() - allowedUrlTimestamp,
+          event_category: "Banner",
+          send_to: vdo_analyticsID,
+          event_label: adframeConfig.tagname,
+        });
+        try {
+          if (!failsafeCheck) {
+            failsafeCheck = true;
+            clearTimeout(failsafeTimeout);
+            var response = JSON.parse(this.response);
+
+            if (response.agent == "false") {
+              adframeConfig = Object.assign(adframeConfig, response);
+              if ( 
+                adframeConfig.display_slot_targeting.include &&
+                (adframeConfig.display_slot_targeting.include.includes("all") ||
+                  adframeConfig.display_slot_targeting.include.includes(
+                    adframeConfig.country
+                  )) || 
+              (
+                  adframeConfig.display_slot_targeting.exclude &&
+                  !(adframeConfig.display_slot_targeting.exclude.includes("all") ||
+                    adframeConfig.display_slot_targeting.exclude.includes(
+                      adframeConfig.country
+                    ))
+                )
+              ){
+                startBannerTag(adframeConfig.ver);
+              }
+            } else {
+              logNewPixel("blocked_agent", undefined, adframeConfig.tagname);
+              vdo_analytics("event", "blocked_agent", {
+                send_to: vdo_analyticsID,
+                event_category: "vdoaijs",
+                event_label: adframeConfig.tagname,
+              });
+            }
+          }
+        } catch (e) {
+          logError(e, adframeConfig.tagname);
+        }
+      }.bind(oReq);
+      oReq.open(
+        "post",
+        "https://targeting.vdo.ai/allowed_url.php?type=json&url=" +
+        encodeURIComponent(current_url) +
+        "&tag=" +
+        adframeConfig.tagname +
+        "&domain=" +
+        adframeConfig.domain,
+        true
+      );
+      var allowedUrlTimestamp = Date.now();
+      oReq.send();
+
+      var failsafeTimeout = setTimeout(function () {
+        if (!failsafeCheck) {
+          failsafeCheck = true;
+          var response = {
+            allowed: "true",
+            agent: "false",
+            ip_address: "null",
+            country: "unknown",
+          }; // Hardcoded default response in case of call takes more than 3seconds
+          adframeConfig = Object.assign(adframeConfig, response);
+          if (adframeConfig.display_slot_targeting.include &&
+            adframeConfig.display_slot_targeting.include.includes("all")
+          ){
+            startBannerTag(adframeConfig.ver);
+          }
+        }
+      }, 3000);
+    })(w_vdo, d_vdo, "//a.vdo.ai/core/", adframeConfig.tagname);
+  } catch (error) {
+    logError(e, adframeConfig.tagname);
+  }
+
+
+
+})();

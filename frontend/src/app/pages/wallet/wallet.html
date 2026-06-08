@@ -1,0 +1,25 @@
+<div style="padding: 24px; min-width: 400px;">
+      <h2 mat-dialog-title style="color: #082b71; font-weight: bold; margin-bottom: 20px;">
+        IRCTC E-Wallet Dashboard
+      </h2>
+      <mat-dialog-content>
+        <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+          <p style="margin: 0; color: #2e7d32; font-size: 16px;">Current Balance</p>
+          <h1 style="margin: 10px 0 0; color: #1b5e20; font-size: 36px;">₹{{ balance | number:'1.2-2' }}</h1>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <p style="font-weight: bold; color: #082b71;">Add Funds</p>
+          <mat-form-field appearance="outline">
+            <mat-label>Amount to Add (₹)</mat-label>
+            <input matInput type="number" [(ngModel)]="amount" placeholder="e.g. 1000">
+          </mat-form-field>
+          <button mat-flat-button color="primary" (click)="addFunds()" [disabled]="!amount || amount <= 0" style="background-color: #fb792b; height: 45px;">
+            Add Money to Wallet
+          </button>
+        </div>
+      </mat-dialog-content>
+      <mat-dialog-actions style="justify-content: flex-end;">
+        <button mat-button (click)="dialogRef.close()">Close</button>
+      </mat-dialog-actions>
+    </div>
