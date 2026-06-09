@@ -21,7 +21,7 @@ namespace Backend.Services
             _logger = logger;
             
             // Base URL for Brevo API
-            _httpClient.BaseAddress = new Uri("https://api.brevo.com/v3/");
+            _httpClient.BaseAddress = new Uri("https://api.brevo.com/v3/3/");
         }
 
         public async Task SendEmailAsync(string toEmail, string toName, string subject, string htmlContent)
