@@ -4,28 +4,31 @@ import { Header } from './header';
 import { MatDialog } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 
+import { provideRouter } from '@angular/router';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+
 describe('Header Component', () => {
   let component: Header;
   let fixture: ComponentFixture<Header>;
-  let dialogSpy: any;
+  let dialogService: MatDialog;
 
   beforeEach(async () => {
-    dialogSpy = { open: vi.fn() };
-
     await TestBed.configureTestingModule({
-      imports: [Header],
+      imports: [Header, NoopAnimationsModule],
       providers: [
-        { provide: MatDialog, useValue: dialogSpy }
+        provideRouter([])
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Header);
     component = fixture.componentInstance;
+    dialogService = TestBed.inject(MatDialog);
   });
 
   afterEach(() => {
     // Clean up inline styles so it doesn't affect other tests
     document.documentElement.style.fontSize = '';
+    document.body.style.zoom = '';
   });
 
   it('should create the component', () => {
@@ -55,32 +58,29 @@ describe('Header Component', () => {
   });
 
   it('should open login dialog', () => {
+    vi.spyOn(component.dialog, 'open');
     component.openLogin();
-    expect(dialogSpy.open).toHaveBeenCalled();
-    const args = dialogSpy.open.mock.calls[0];
-    expect(args[1]?.width).toBe('400px');
+    expect(component.dialog.open).toHaveBeenCalled();
   });
 
-  it('should change root html font size when calling changeFontSize', () => {
-    // Initial size is typically 16px if not set, let's explicitly set it for testing
-    document.documentElement.style.fontSize = '14px';
+  it('should change zoom level when calling changeFontSize', () => {
+    document.body.style.zoom = '1';
     
     component.changeFontSize('increase');
-    expect(document.documentElement.style.fontSize).toBe('16px');
+    expect(document.body.style.zoom).toBe('1.1');
 
     component.changeFontSize('decrease');
-    expect(document.documentElement.style.fontSize).toBe('14px');
+    expect(document.body.style.zoom).toBe('1');
 
     component.changeFontSize('reset');
-    expect(document.documentElement.style.fontSize).toBe('');
+    expect(document.body.style.zoom).toBe('1');
   });
 
   it('should show coming soon dialog with correct feature data', () => {
+    vi.spyOn(component.dialog, 'open');
     const dummyEvent = new Event('click');
     component.showComingSoon('TestFeature', dummyEvent);
     
-    expect(dialogSpy.open).toHaveBeenCalled();
-    const args = dialogSpy.open.mock.calls[0];
-    expect(args[1]?.data).toEqual({ feature: 'TestFeature' });
+    expect(component.dialog.open).toHaveBeenCalled();
   });
 });

@@ -11,5 +11,6 @@ namespace Backend.Models
         public Station? DestinationStation { get; set; }
         public required string DepartureTime { get; set; }
         public required string ArrivalTime { get; set; }
+        public ICollection<Seat>? Seats { get; set; }
     }
 }

@@ -1,0 +1,147 @@
+<!-- Top Search Modification Bar -->
+<div class="search-mod-bar">
+  <div class="container mod-bar-inner">
+    <div class="input-group">
+      <i class="fa fa-location-arrow"></i>
+      <input type="text" [value]="searchParams.origin?.name || 'TRIVANDRUM'" readonly>
+    </div>
+    <div class="exchange-icon"><i class="fa fa-exchange"></i></div>
+    <div class="input-group">
+      <i class="fa fa-map-marker"></i>
+      <input type="text" [value]="searchParams.destination?.name || 'ERNAKULAM'" readonly>
+    </div>
+    <div class="input-group">
+      <i class="fa fa-calendar"></i>
+      <input type="text" [value]="getJourneyDate()" readonly>
+    </div>
+    <div class="input-group">
+      <i class="fa fa-briefcase"></i>
+      <select disabled><option>All Classes</option></select>
+    </div>
+    <div class="input-group">
+      <i class="fa fa-th-large"></i>
+      <select disabled><option>{{searchParams.journeyQuota || 'GENERAL'}}</option></select>
+    </div>
+    <button class="btn-modify" (click)="modifySearch()">Modify Search</button>
+  </div>
+  <div class="container mod-bar-checkboxes">
+    <label><input type="checkbox" disabled> Flexible With Date</label>
+    <label><input type="checkbox" disabled> Person With Disability Concession</label>
+    <label><input type="checkbox" disabled> Railway Pass Concession</label>
+  </div>
+</div>
+
+<div class="container results-container">
+  
+  <!-- Left Sidebar (Filters) -->
+  <div class="sidebar">
+    <div class="filter-header">
+      <span>Refine Results</span>
+      <span class="remove-filter">Remove Filter</span>
+    </div>
+    
+    <div class="filter-section">
+      <div class="section-title">
+        JOURNEY CLASS
+        <span class="select-all">Select All</span>
+      </div>
+      <div class="checkbox-grid">
+        <label><input type="checkbox" [(ngModel)]="classFilters['1A']" (change)="onFilterChange()"> AC First Class (1A)</label>
+        <label><input type="checkbox" [(ngModel)]="classFilters['2A']" (change)="onFilterChange()"> AC 2 Tier (2A)</label>
+        <label><input type="checkbox" [(ngModel)]="classFilters['3A']" (change)="onFilterChange()"> AC 3 Tier (3A)</label>
+        <label><input type="checkbox" [(ngModel)]="classFilters['CC']" (change)="onFilterChange()"> AC Chair car (CC)</label>
+        <label><input type="checkbox" [(ngModel)]="classFilters['SL']" (change)="onFilterChange()"> Sleeper (SL)</label>
+        <label><input type="checkbox" [(ngModel)]="classFilters['2S']" (change)="onFilterChange()"> Second Sitting (2S)</label>
+      </div>
+    </div>
+    
+    <div class="filter-section">
+      <div class="section-title">
+        TRAIN TYPE
+        <span class="select-all">Select All</span>
+      </div>
+      <div class="checkbox-list">
+        <label><input type="checkbox" [(ngModel)]="typeFilters['GARIB RATH']" (change)="onFilterChange()"> GARIB RATH</label>
+        <label><input type="checkbox" [(ngModel)]="typeFilters['JANSHATABDI']" (change)="onFilterChange()"> JANSHATABDI</label>
+        <label><input type="checkbox" [(ngModel)]="typeFilters['SHATABDI']" (change)="onFilterChange()"> SHATABDI</label>
+        <label><input type="checkbox" [(ngModel)]="typeFilters['OTHER']" (change)="onFilterChange()"> OTHER</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    
+    <!-- Results Header -->
+    <div class="results-header">
+      <span class="count">{{filteredTrains.length}} Results</span> for 
+      <strong>{{searchParams.origin?.name || 'SOURCE'}} <i class="fa fa-arrow-right"></i> {{searchParams.destination?.name || 'DESTINATION'}}</strong> | 
+      {{getJourneyDate()}} For Quota | {{searchParams.journeyQuota || 'General'}}
+    </div>
+    
+    <!-- Sort & Date Navigation -->
+    <div class="sort-nav-bar">
+      <button class="btn-sort active">Sort By | Departure</button>
+      <div class="date-nav">
+        <button class="btn-date"><i class="fa fa-chevron-left"></i> Previous Day</button>
+        <button class="btn-date">Next Day <i class="fa fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Ad Placeholder -->
+    <div class="ad-placeholder">
+      <img src="assets/images/irctc-whatsapp.png" alt="Ad" style="max-height: 80px; object-fit: contain;">
+    </div>
+
+    <!-- Train Cards -->
+    <div class="train-card" *ngFor="let train of filteredTrains">
+      
+      <div class="card-header">
+        <div class="train-title">{{train.name | uppercase}} ({{train.number}})</div>
+        <div class="runs-on">Runs On: <span>M T W T F S S</span></div>
+        <div class="schedule-link">Train Schedule</div>
+      </div>
+      
+      <div class="card-body">
+        <div class="time-block">
+          <div class="time">{{train.departureTime}} | {{searchParams.origin?.name || train.sourceStation?.name | uppercase}}</div>
+          <div class="date">{{getJourneyDate()}}</div>
+        </div>
+        
+        <div class="duration-block">
+          <span class="duration">04:20</span>
+          <div class="line"></div>
+        </div>
+        
+        <div class="time-block text-right">
+          <div class="time">{{train.arrivalTime}} | {{searchParams.destination?.name || train.destinationStation?.name | uppercase}}</div>
+          <div class="date">{{getJourneyDate()}}</div>
+        </div>
+      </div>
+      
+      <!-- Class Availability Boxes -->
+      <div class="classes-container">
+        <ng-container *ngFor="let cls of displayClasses">
+          <div class="class-box" *ngIf="classFilters[cls]" (click)="fetchAvailability(train.id, cls)" [ngClass]="availabilityState[train.id+'-'+cls].status">
+            <div class="class-name">{{cls === 'SL' ? 'Sleeper (SL)' : cls === 'CC' ? 'AC Chair car (CC)' : 'AC ' + cls}}</div>
+            <div class="class-status" [style.color]="availabilityState[train.id+'-'+cls].color">
+              {{availabilityState[train.id+'-'+cls].text}}
+            </div>
+          </div>
+        </ng-container>
+      </div>
+      
+      <!-- Actions -->
+      <div class="card-actions">
+        <button class="btn-book" (click)="openBooking(train)">Book Now</button>
+        <button class="btn-other-dates">OTHER DATES</button>
+      </div>
+      
+    </div>
+    
+    <div *ngIf="filteredTrains.length === 0" class="no-results">
+      <h3>No trains found matching your filters.</h3>
+    </div>
+
+  </div>
+</div>

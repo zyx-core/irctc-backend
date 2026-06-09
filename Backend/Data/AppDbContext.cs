@@ -13,6 +13,7 @@ namespace Backend.Data
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<Meal> Meals { get; set; }
         public DbSet<MealOrder> MealOrders { get; set; }
+        public DbSet<Seat> Seats { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

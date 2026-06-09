@@ -10,6 +10,7 @@ import { CancelTicketComponent } from '../../pages/cancel-ticket/cancel-ticket';
 import { WalletComponent } from '../../pages/wallet/wallet';
 import { MealsComponent } from '../../pages/meals/meals';
 import { ComingSoonComponent } from '../coming-soon/coming-soon';
+import { ContactUsComponent } from '../contact-us/contact-us';
 import { TrainScheduleComponent } from '../../pages/train-schedule/train-schedule';
 import { ApiService } from '../../service/api.service';
 import { Router, RouterModule } from '@angular/router';
@@ -63,15 +64,13 @@ export class Header implements OnInit, OnDestroy {
   }
 
   changeFontSize(action: string) {
-    const htmlElement = document.documentElement;
-    let currentSize = parseFloat(window.getComputedStyle(htmlElement).fontSize);
-    
-    if (action === 'increase' && currentSize < 24) {
-      htmlElement.style.fontSize = (currentSize + 2) + 'px';
-    } else if (action === 'decrease' && currentSize > 10) {
-      htmlElement.style.fontSize = (currentSize - 2) + 'px';
+    let currentZoom = parseFloat(document.body.style.zoom || '1');
+    if (action === 'increase' && currentZoom < 1.3) {
+      document.body.style.zoom = (currentZoom + 0.1).toString();
+    } else if (action === 'decrease' && currentZoom > 0.8) {
+      document.body.style.zoom = (currentZoom - 0.1).toString();
     } else if (action === 'reset') {
-      htmlElement.style.fontSize = ''; 
+      document.body.style.zoom = '1';
     }
   }
 
@@ -116,6 +115,11 @@ export class Header implements OnInit, OnDestroy {
   openTrainSchedule(event: Event) {
     event.preventDefault();
     this.dialog.open(TrainScheduleComponent, { width: '650px' });
+  }
+
+  openContactUs(event: Event) {
+    event.preventDefault();
+    this.dialog.open(ContactUsComponent, { width: '450px' });
   }
 
   showComingSoon(feature: string, event: Event) {

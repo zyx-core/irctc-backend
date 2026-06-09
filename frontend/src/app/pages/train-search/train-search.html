@@ -89,8 +89,8 @@
             </div>
 
             <div style="text-align: center; margin-top: 10px;">
-              <button type="submit" mat-flat-button style="background: #f57f17; color: white; padding: 10px 40px; font-size: 18px; font-weight: bold; border-radius: 4px; min-width: 200px;">
-                Search Trains
+              <button type="submit" mat-flat-button [disabled]="isSearching" style="background: #f57f17; color: white; padding: 10px 40px; font-size: 18px; font-weight: bold; border-radius: 4px; min-width: 200px;">
+                {{ isSearching ? 'Searching...' : 'Search Trains' }}
               </button>
             </div>
           </form>

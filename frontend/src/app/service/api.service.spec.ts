@@ -33,7 +33,7 @@ describe('ApiService', () => {
   });
 
   it('should get and set user id correctly using localStorage', () => {
-    service.setUserId(123);
+    service.setUserId(123, 'tester', 'Tester Name', false);
     expect(service.getUserId()).toBe(123);
     expect(localStorage.getItem('userId')).toBe('123');
     
@@ -89,7 +89,7 @@ describe('ApiService', () => {
   });
 
   it('should allow booking when logged in', () => {
-    service.setUserId(99);
+    service.setUserId(99, 'test', 'Test User', false);
     const dummyRes = { success: true, pnr: '1234567890' };
 
     service.bookTicket(101, 'John Doe', 30).subscribe(res => {

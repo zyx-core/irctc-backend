@@ -78,6 +78,11 @@ export class ApiService {
     return this.http.get<any[]>(`${this.baseUrl}/Train/search`, { params });
   }
 
+  lookupTrains(query: string): Observable<any[]> {
+    const params = new HttpParams().set('query', query);
+    return this.http.get<any[]>(`${this.baseUrl}/Train/lookup`, { params });
+  }
+
   getTrainSchedule(trainNumber: string): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/Train/schedule/${trainNumber}`);
   }

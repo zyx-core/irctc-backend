@@ -146,5 +146,20 @@ namespace Backend.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("test-email")]
+        public async Task<IActionResult> TestEmail([FromQuery] string email, [FromServices] Backend.Services.IEmailService emailService)
+        {
+            if (string.IsNullOrEmpty(email)) return BadRequest("Email is required");
+            
+            await emailService.SendEmailAsync(
+                email, 
+                "Test User", 
+                "IRCTC Test Email Integration", 
+                "<h1>Success!</h1><p>If you are reading this, your Brevo email integration is working perfectly!</p>"
+            );
+
+            return Ok(new { message = "Test email sent successfully to " + email });
+        }
     }
 }

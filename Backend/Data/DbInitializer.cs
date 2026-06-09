@@ -31,6 +31,15 @@ namespace Backend.Data
         {
             context.Database.EnsureCreated();
 
+            bool needsSeeding = context.Stations.Count() <= 100 || !context.Trains.Any(t => t.SourceStation.Code == "ERS");
+
+            if (needsSeeding)
+            {
+                // Wipe the DB to ensure clean relations.
+                context.Database.EnsureDeleted();
+                context.Database.EnsureCreated();
+            }
+
             // Ensure Admin User Exists
             if (!context.Users.Any(u => u.Username == "admin"))
             {
@@ -49,14 +58,10 @@ namespace Backend.Data
                 context.SaveChanges();
             }
 
-            if (context.Stations.Count() > 100 && context.Trains.Any(t => t.SourceStation.Code == "ERS"))
+            if (!needsSeeding)
             {
                 return;   // DB has already been seeded correctly with Kerala major stations
             }
-
-            // Wipe the DB to ensure clean relations.
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
 
             var jsonPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "stations.json");
             if (!File.Exists(jsonPath))
@@ -128,12 +133,51 @@ namespace Backend.Data
                 }
             }
 
+            // Explicitly add train 19857 to ensure the test number works
+            if (keralaStations.Count >= 2)
+            {
+                trains.Add(new Train
+                {
+                    Number = "19857",
+                    Name = "TEST EXPRESS",
+                    SourceStationId = keralaStations[0].Id,
+                    DestinationStationId = keralaStations[1].Id,
+                    DepartureTime = "08:00",
+                    ArrivalTime = "16:00"
+                });
+            }
+
             // Chunk train insertion to avoid max parameter limits in EF Core / MySQL
             int batchSize = 2000;
+            var allSeats = new List<Seat>();
+            
             for(int i = 0; i < trains.Count; i += batchSize)
             {
                 var batch = trains.Skip(i).Take(batchSize).ToList();
                 context.Trains.AddRange(batch);
+                context.SaveChanges();
+                
+                // For each saved train in this batch, create 50 seats
+                foreach (var train in batch)
+                {
+                    for (int s = 1; s <= 50; s++)
+                    {
+                        allSeats.Add(new Seat
+                        {
+                            TrainId = train.Id,
+                            SeatNumber = $"S{s}",
+                            IsBooked = false
+                        });
+                    }
+                }
+            }
+
+            // Save seats in batches
+            int seatBatchSize = 10000;
+            for(int i = 0; i < allSeats.Count; i += seatBatchSize)
+            {
+                var seatBatch = allSeats.Skip(i).Take(seatBatchSize).ToList();
+                context.Seats.AddRange(seatBatch);
                 context.SaveChanges();
             }
 

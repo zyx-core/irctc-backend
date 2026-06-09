@@ -1,21 +1,29 @@
-import { vi, expect, describe, it, beforeEach, afterEach } from 'vitest';
+import { vi, expect, describe, it, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TrainSearch } from './train-search';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ApiService } from '../../service/api.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
+import { Router } from '@angular/router';
+import { of, BehaviorSubject } from 'rxjs';
 
 describe('TrainSearch Component', () => {
   let component: TrainSearch;
   let fixture: ComponentFixture<TrainSearch>;
   let apiServiceSpy: any;
   let dialogSpy: any;
+  let routerSpy: any;
 
   beforeEach(async () => {
-    const apiSpy = { getStations: vi.fn(), searchTrains: vi.fn() };
-    const dlgSpy = { open: vi.fn() };
+    const apiSpy = { 
+      getStations: vi.fn(), 
+      searchTrains: vi.fn(),
+      authState: new BehaviorSubject(false),
+      getUserTickets: vi.fn().mockReturnValue(of([]))
+    };
+    const dlgSpy = { open: vi.fn().mockReturnValue({ afterClosed: () => of(null) }) };
+    const rtrSpy = { navigate: vi.fn() };
 
     // Mock initial station fetch
     apiSpy.getStations.mockReturnValue(of([
@@ -32,7 +40,8 @@ describe('TrainSearch Component', () => {
       ],
       providers: [
         { provide: ApiService, useValue: apiSpy },
-        { provide: MatDialog, useValue: dlgSpy }
+        { provide: MatDialog, useValue: dlgSpy },
+        { provide: Router, useValue: rtrSpy }
       ]
     }).compileComponents();
 
@@ -40,6 +49,7 @@ describe('TrainSearch Component', () => {
     component = fixture.componentInstance;
     apiServiceSpy = TestBed.inject(ApiService) as any;
     dialogSpy = TestBed.inject(MatDialog) as any;
+    routerSpy = TestBed.inject(Router) as any;
     
     // Trigger ngOnInit / constructor logic
     fixture.detectChanges();
@@ -75,7 +85,7 @@ describe('TrainSearch Component', () => {
     expect(component.searchForm.get('destination')?.value).toBe('DEL');
   });
 
-  it('should call apiService.searchTrains when form is valid onSearch', () => {
+  it('should call apiService.searchTrains when form is valid onSearch and navigate', () => {
     const testDate = new Date();
     component.searchForm.patchValue({ 
       origin: 'DEL', 
@@ -83,16 +93,14 @@ describe('TrainSearch Component', () => {
       journeyDate: testDate
     });
 
-    apiServiceSpy.searchTrains.mockReturnValue(of([{ id: 101, name: 'Rajdhani', number: '12345' }]));
-    
-    // Using window.alert spy so it doesn't interrupt test
-    vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const mockTrains = [{ id: 101, name: 'Rajdhani', number: '12345' }];
+    apiServiceSpy.searchTrains.mockReturnValue(of(mockTrains));
     
     component.onSearch();
 
     expect(apiServiceSpy.searchTrains).toHaveBeenCalledWith(1, 2, testDate.toISOString());
-    expect(component.searchResults.length).toBe(1);
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Found 1 train(s)!'));
+    expect(routerSpy.navigate).toHaveBeenCalled();
+    expect(routerSpy.navigate.mock.calls[0][0]).toEqual(['/train-list']);
   });
 
   it('should open booking dialog when openBooking is called', () => {

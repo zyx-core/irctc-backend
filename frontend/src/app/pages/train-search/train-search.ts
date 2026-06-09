@@ -21,6 +21,7 @@ import { RefundStatusComponent } from '../refund-status/refund-status';
 import { ChartsVacancyComponent } from '../charts-vacancy/charts-vacancy';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-train-search',
@@ -106,7 +107,7 @@ export class TrainSearch implements OnInit, OnDestroy {
   filteredStations: any[] = [];
   searchResults: Train[] = [];
 
-  constructor(private fb: FormBuilder, private apiService: ApiService, private dialog: MatDialog) {
+  constructor(private fb: FormBuilder, private apiService: ApiService, private dialog: MatDialog, private router: Router) {
     this.searchForm = this.fb.group({
       origin: ['', Validators.required],
       destination: ['', Validators.required],
@@ -183,6 +184,8 @@ export class TrainSearch implements OnInit, OnDestroy {
     this.searchForm.patchValue({ origin: to, destination: from });
   }
 
+  isSearching = false;
+
   onSearch() {
     if (this.searchForm.valid) {
       const fromCode = this.searchForm.get('origin')?.value;
@@ -193,15 +196,31 @@ export class TrainSearch implements OnInit, OnDestroy {
       const toStation = this.stations.find(s => s.code === toCode || s.name === toCode);
 
       if (fromStation && toStation) {
+        this.isSearching = true;
         this.apiService.searchTrains(fromStation.id, toStation.id, date.toISOString())
-          .subscribe(trains => {
-            console.log('Found trains:', trains);
-            this.searchResults = trains;
-            if(trains.length === 0) alert('No trains found between selected stations.');
-            else {
-               setTimeout(() => {
-                 document.getElementById('train-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-               }, 100);
+          .subscribe({
+            next: (trains) => {
+              this.isSearching = false;
+              console.log('Found trains:', trains);
+              if(trains.length === 0) alert('No trains found between selected stations.');
+              else {
+                 this.router.navigate(['/train-list'], { 
+                   state: { 
+                     trains: trains,
+                     searchParams: {
+                       origin: fromStation,
+                       destination: toStation,
+                       date: date,
+                       journeyClass: this.searchForm.get('journeyClass')?.value,
+                       journeyQuota: this.searchForm.get('journeyQuota')?.value
+                     }
+                   } 
+                 });
+              }
+            },
+            error: (err) => {
+              this.isSearching = false;
+              alert('Error searching trains: ' + (err.error?.message || err.message));
             }
           });
       } else {

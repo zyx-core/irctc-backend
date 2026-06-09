@@ -37,12 +37,17 @@ export class PnrEnquiryComponent implements OnInit {
     }
   }
 
+  isLoading = false;
+
   checkPnr() {
+    this.isLoading = true;
     this.apiService.getPnrStatus(this.pnr).subscribe({
       next: (res) => {
+        this.isLoading = false;
         this.result = res;
       },
       error: (err) => {
+        this.isLoading = false;
         this.result = null;
         alert('PNR fetch failed: ' + (err.error?.message || 'Not found'));
       }

@@ -8,8 +8,8 @@
             <mat-label>Enter PNR Number</mat-label>
             <input matInput [(ngModel)]="pnr" placeholder="10-digit PNR">
           </mat-form-field>
-          <button mat-flat-button color="primary" (click)="checkPnr()" [disabled]="!pnr" style="background-color: #fb792b; margin-top: 4px; height: 50px;">
-            Search
+          <button mat-flat-button color="primary" (click)="checkPnr()" [disabled]="!pnr || isLoading" style="background-color: #fb792b; margin-top: 4px; height: 50px;">
+            {{ isLoading ? 'Searching...' : 'Search' }}
           </button>
         </div>
 

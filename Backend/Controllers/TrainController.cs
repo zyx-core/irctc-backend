@@ -32,6 +32,22 @@ namespace Backend.Controllers
             return Ok(trains);
         }
 
+        [HttpGet("lookup")]
+        public async Task<ActionResult> LookupTrains([FromQuery] string query = "")
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+                return Ok(new List<object>());
+
+            var lower = query.ToLower();
+            var results = await _context.Trains
+                .Where(t => t.Number.ToLower().Contains(lower) || t.Name.ToLower().Contains(lower))
+                .Take(20)
+                .Select(t => new { t.Id, t.Number, t.Name })
+                .ToListAsync();
+
+            return Ok(results);
+        }
+
         [HttpGet("schedule/{trainNumber}")]
         public async Task<ActionResult> GetTrainSchedule(string trainNumber)
         {

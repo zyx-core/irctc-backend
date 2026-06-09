@@ -40,50 +40,76 @@ namespace Backend.Controllers
             var train = await _context.Trains.FindAsync(request.TrainId);
             if (train == null) return NotFound(new { message = "Train not found" });
 
-            // Dummy pricing logic: 500 fixed rate
-            if (string.IsNullOrEmpty(request.PaymentId))
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                if (user.WalletBalance < 500)
+                // Find an available seat with pessimistic locking
+                var availableSeat = await _context.Seats
+                    .FromSqlInterpolated($"SELECT * FROM Seats WHERE TrainId = {request.TrainId} AND IsBooked = FALSE LIMIT 1 FOR UPDATE")
+                    .FirstOrDefaultAsync();
+
+                if (availableSeat == null)
                 {
-                    return BadRequest(new { message = "Insufficient Wallet Balance! Minimum ₹500 required." });
+                    return BadRequest(new { message = "Train is fully booked." });
                 }
 
-                // Deduct balance
-                user.WalletBalance -= 500;
+                // Dummy pricing logic: 500 fixed rate
+                if (string.IsNullOrEmpty(request.PaymentId))
+                {
+                    if (user.WalletBalance < 500)
+                    {
+                        return BadRequest(new { message = "Insufficient Wallet Balance! Minimum ₹500 required." });
+                    }
+
+                    // Deduct balance
+                    user.WalletBalance -= 500;
+                }
+
+                // Mark seat as booked
+                availableSeat.IsBooked = true;
+
+                // Generate PNR
+                var random = new Random();
+                string pnr = random.Next(1000000000, 2147483647).ToString();
+
+                var ticket = new Ticket
+                {
+                    Pnr = pnr,
+                    UserId = request.UserId,
+                    TrainId = request.TrainId,
+                    SeatId = availableSeat.Id,
+                    PassengerName = request.PassengerName,
+                    PassengerAge = request.PassengerAge,
+                    Status = "CONFIRMED",
+                    BookingDate = DateTime.UtcNow
+                };
+
+                _context.Tickets.Add(ticket);
+                await _context.SaveChangesAsync();
+                
+                await transaction.CommitAsync();
+
+                var subject = $"Ticket Confirmation - PNR {ticket.Pnr}";
+                var html = $"<h1>Booking Confirmed</h1><p>Dear {user.FullName},</p><p>Your ticket on {train.Name} has been confirmed. Seat: {availableSeat.SeatNumber}. PNR: {ticket.Pnr}.</p>";
+                if (string.IsNullOrEmpty(request.PaymentId)) {
+                    html += $"<p>An amount of ₹500 was deducted from your wallet. New Balance: ₹{user.WalletBalance}.</p>";
+                }
+                await _emailService.SendEmailAsync(user.Email, user.FullName, subject, html);
+
+                return Ok(new { message = "Ticket Booked Successfully", pnr = ticket.Pnr, seat = availableSeat.SeatNumber, newBalance = user.WalletBalance });
             }
-
-            // Generate PNR
-            var random = new Random();
-            string pnr = random.Next(1000000000, 2147483647).ToString();
-
-            var ticket = new Ticket
+            catch (Exception ex)
             {
-                Pnr = pnr,
-                UserId = request.UserId,
-                TrainId = request.TrainId,
-                PassengerName = request.PassengerName,
-                PassengerAge = request.PassengerAge,
-                Status = "CONFIRMED",
-                BookingDate = DateTime.UtcNow
-            };
-
-            _context.Tickets.Add(ticket);
-            await _context.SaveChangesAsync();
-
-            var subject = $"Ticket Confirmation - PNR {ticket.Pnr}";
-            var html = $"<h1>Booking Confirmed</h1><p>Dear {user.FullName},</p><p>Your ticket on {train.Name} has been confirmed. PNR: {ticket.Pnr}.</p>";
-            if (string.IsNullOrEmpty(request.PaymentId)) {
-                html += $"<p>An amount of ₹500 was deducted from your wallet. New Balance: ₹{user.WalletBalance}.</p>";
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "An error occurred during booking. Please try again.", error = ex.Message });
             }
-            await _emailService.SendEmailAsync(user.Email, user.FullName, subject, html);
-
-            return Ok(new { message = "Ticket Booked Successfully", pnr = ticket.Pnr, newBalance = user.WalletBalance });
         }
 
         [HttpGet("pnr/{pnr}")]
         public async Task<IActionResult> GetByPnr(string pnr)
         {
             var ticket = await _context.Tickets
+                .Include(t => t.Seat)
                 .Include(t => t.Train).ThenInclude(tr => tr.SourceStation)
                 .Include(t => t.Train).ThenInclude(tr => tr.DestinationStation)
                 .FirstOrDefaultAsync(t => t.Pnr == pnr);
@@ -101,30 +127,51 @@ namespace Backend.Controllers
 
             if (ticket.Status == "CANCELLED") return BadRequest(new { message = "Ticket is already cancelled" });
 
-            ticket.Status = "CANCELLED";
-            
-            // Refund
-            var user = await _context.Users.FindAsync(userId);
-            if (user != null)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                user.WalletBalance += 400; // ₹100 cancellation charge
+                ticket.Status = "CANCELLED";
+                
+                // Free the seat
+                if (ticket.SeatId.HasValue)
+                {
+                    var seat = await _context.Seats.FindAsync(ticket.SeatId.Value);
+                    if (seat != null)
+                    {
+                        seat.IsBooked = false;
+                    }
+                }
+                
+                // Refund
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    user.WalletBalance += 400; // ₹100 cancellation charge
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                if (user != null) {
+                    var subject = $"Ticket Cancelled - PNR {pnr}";
+                    var html = $"<h1>Cancellation Successful</h1><p>Dear {user.FullName},</p><p>Your ticket with PNR {pnr} has been cancelled.</p><p>An amount of ₹400 was refunded to your wallet. New Balance: ₹{user.WalletBalance}.</p>";
+                    await _emailService.SendEmailAsync(user.Email, user.FullName, subject, html);
+                }
+
+                return Ok(new { message = "Ticket cancelled. ₹400 refunded to wallet." });
             }
-
-            await _context.SaveChangesAsync();
-
-            if (user != null) {
-                var subject = $"Ticket Cancelled - PNR {pnr}";
-                var html = $"<h1>Cancellation Successful</h1><p>Dear {user.FullName},</p><p>Your ticket with PNR {pnr} has been cancelled.</p><p>An amount of ₹400 was refunded to your wallet. New Balance: ₹{user.WalletBalance}.</p>";
-                await _emailService.SendEmailAsync(user.Email, user.FullName, subject, html);
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "An error occurred during cancellation.", error = ex.Message });
             }
-
-            return Ok(new { message = "Ticket cancelled. ₹400 refunded to wallet." });
         }
 
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetUserTickets(int userId)
         {
             var tickets = await _context.Tickets
+                .Include(t => t.Seat)
                 .Include(t => t.Train).ThenInclude(tr => tr.SourceStation)
                 .Include(t => t.Train).ThenInclude(tr => tr.DestinationStation)
                 .Where(t => t.UserId == userId)

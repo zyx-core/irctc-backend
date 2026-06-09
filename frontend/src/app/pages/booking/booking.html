@@ -6,7 +6,12 @@
         <div style="margin-bottom: 15px; color: #666;">
           <p><strong>Train No:</strong> {{ data.train.number }}</p>
           <p><strong>Departure:</strong> {{ data.train.departureTime }}</p>
-          <p><strong>Price:</strong> ₹500 (Fixed Fare)</p>
+          <div style="background-color: #f5f8ff; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #dbe2f9;">
+            <p style="margin: 0 0 5px 0;"><strong>Base Fare:</strong> ₹450.00</p>
+            <p style="margin: 0 0 5px 0;"><strong>Taxes & Fees (11.11% GST):</strong> ₹50.00</p>
+            <hr style="border: 0; border-top: 1px solid #dbe2f9; margin: 8px 0;">
+            <p style="margin: 0; font-size: 16px; color: #082b71;"><strong>Total Price:</strong> ₹500.00</p>
+          </div>
         </div>
 
         <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" style="display: flex; flex-direction: column;">

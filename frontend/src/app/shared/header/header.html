@@ -87,7 +87,7 @@
                 LOYALTY <span class="caret"></span>
               </a>
               <ul class="dropdown-menu">
-                <li><a (click)="showComingSoon('About IRCTC Loyalty program', $event)">About IRCTC Loyalty program</a></li>
+                <li><a href="https://contents.irctc.co.in/en/AboutEwallet.pdf" target="_blank" style="cursor: pointer;">About IRCTC Loyalty program</a></li>
                 <li><a (click)="showComingSoon('Compare Co-brand Cards', $event)">Compare Co-brand Cards</a></li>
               </ul>
             </li>
@@ -97,25 +97,25 @@
                 E-WALLET <span class="caret"></span>
               </a>
               <ul class="dropdown-menu">
-                <li><a (click)="showComingSoon('About IRCTC eWallet', $event)">About IRCTC eWallet</a></li>
+                <li><a href="https://contents.irctc.co.in/en/AboutEwallet.pdf" target="_blank" style="cursor: pointer;">About IRCTC eWallet</a></li>
                 <li><a (click)="showComingSoon('IRCTC eWallet User Guide', $event)">IRCTC eWallet User Guide</a></li>
               </ul>
             </li>
 
-            <li><a (click)="showComingSoon('Alerts', $event)" style="cursor:pointer;">ALERTS</a></li>
+            <li><a href="https://www.irctc.co.in/nget/enquiry/alerts" target="_blank" style="cursor:pointer;">ALERTS</a></li>
 
             <li class="dropdown">
-              <a class="dropdown-toggle" (click)="showComingSoon('Other Services', $event)">
+              <a class="dropdown-toggle" style="cursor: pointer;">
                 OTHER SERVICES <span class="caret"></span>
               </a>
               <ul class="dropdown-menu">
-                <li><a (click)="showComingSoon('Buses', $event)">Buses</a></li>
-                <li><a (click)="showComingSoon('Flights', $event)">Flights</a></li>
-                <li><a (click)="showComingSoon('Hotels', $event)">Hotels</a></li>
+                <li><a href="https://www.bus.irctc.co.in/home" target="_blank" style="cursor: pointer;">Buses</a></li>
+                <li><a href="https://www.air.irctc.co.in/" target="_blank" style="cursor: pointer;">Flights</a></li>
+                <li><a href="https://www.hotels.irctc.co.in/home" target="_blank" style="cursor: pointer;">Hotels</a></li>
               </ul>
             </li>
 
-            <li><a (click)="showComingSoon('Contact Us', $event)" style="cursor:pointer;">CONTACT US</a></li>
+            <li><a (click)="openContactUs($event)" style="cursor:pointer;">CONTACT US</a></li>
           </ul>
         </div>
       </div>

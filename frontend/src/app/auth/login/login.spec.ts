@@ -1,10 +1,11 @@
-import { vi, expect, describe, it, beforeEach, afterEach } from 'vitest';
+import { vi, expect, describe, it, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LoginComponent } from './login';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { ApiService } from '../../service/api.service';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 describe('Login Component', () => {
@@ -12,10 +13,12 @@ describe('Login Component', () => {
   let fixture: ComponentFixture<LoginComponent>;
   let apiSpy: any;
   let dialogRefSpy: any;
+  let routerSpy: any;
 
   beforeEach(async () => {
-    apiSpy = { login: vi.fn(), register: vi.fn(), setUserId: vi.fn() };
+    apiSpy = { login: vi.fn(), setUserId: vi.fn() };
     dialogRefSpy = { close: vi.fn() };
+    routerSpy = { navigate: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [
@@ -26,7 +29,8 @@ describe('Login Component', () => {
       providers: [
         { provide: ApiService, useValue: apiSpy },
         { provide: MatDialogRef, useValue: dialogRefSpy },
-        { provide: MAT_DIALOG_DATA, useValue: {} }
+        { provide: MAT_DIALOG_DATA, useValue: {} },
+        { provide: Router, useValue: routerSpy }
       ]
     }).compileComponents();
 
@@ -44,33 +48,29 @@ describe('Login Component', () => {
     expect(component.authForm.valid).toBe(false);
   });
 
-  it('should toggle to register mode and add email validation', () => {
-    expect(component.isLogin).toBe(true);
-    
-    component.toggleMode();
-    
-    expect(component.isLogin).toBe(false);
-    // In register mode, email is required
-    component.authForm.patchValue({ username: 'test', password: 'password', email: '' });
-    expect(component.authForm.valid).toBe(false); // fails email required
-
-    component.authForm.patchValue({ email: 'test@example.com' });
+  it('should validate form if filled', () => {
+    component.authForm.patchValue({ username: 'user', password: 'pwd' });
     expect(component.authForm.valid).toBe(true);
   });
 
+  it('should go to register', () => {
+    component.goToRegister();
+    expect(dialogRefSpy.close).toHaveBeenCalled();
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/register']);
+  });
+
   it('should call apiService.login and close dialog on successful login', () => {
-    vi.spyOn(window, 'alert').mockImplementation(() => {});
     component.authForm.patchValue({ username: 'testuser', password: 'password' });
     
-    const mockResponse = { username: 'testuser', userId: 10 };
+    const mockResponse = { username: 'testuser', userId: 10, fullName: 'Test', isAdmin: false };
     apiSpy.login.mockReturnValue(of(mockResponse));
 
     component.onSubmit();
 
     expect(apiSpy.login).toHaveBeenCalledWith({ username: 'testuser', password: 'password' });
-    expect(apiSpy.setUserId).toHaveBeenCalledWith(10);
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Login successful!'));
+    expect(apiSpy.setUserId).toHaveBeenCalledWith(10, 'testuser', 'Test', false);
     expect(dialogRefSpy.close).toHaveBeenCalledWith(mockResponse);
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/']);
   });
 
   it('should alert on login failure', () => {
@@ -84,19 +84,5 @@ describe('Login Component', () => {
     expect(apiSpy.login).toHaveBeenCalled();
     expect(window.alert).toHaveBeenCalledWith('Login failed: Invalid credentials');
     expect(dialogRefSpy.close).not.toHaveBeenCalled();
-  });
-
-  it('should call apiService.register and toggle mode on successful registration', () => {
-    vi.spyOn(window, 'alert').mockImplementation(() => {});
-    component.toggleMode(); // switch to register
-    component.authForm.patchValue({ username: 'testuser', password: 'password', email: 'test@mail.com' });
-    
-    apiSpy.register.mockReturnValue(of({ success: true }));
-
-    component.onSubmit();
-
-    expect(apiSpy.register).toHaveBeenCalledWith({ username: 'testuser', password: 'password', email: 'test@mail.com' });
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Registration successful!'));
-    expect(component.isLogin).toBe(true); // toggles back to login
   });
 });

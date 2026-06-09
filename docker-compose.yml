@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   mysql:
@@ -25,6 +24,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=mysql;Port=3306;Database=irctcdb;User=root;Password=rootpassword;
+    volumes:
+      - ./stations.json:/stations.json
     depends_on:
       - mysql
 

@@ -18,6 +18,9 @@ namespace Backend.Models
         public int TrainId { get; set; }
         public Train? Train { get; set; }
         
+        public int? SeatId { get; set; }
+        public Seat? Seat { get; set; }
+        
         public string PassengerName { get; set; } = string.Empty;
         public int PassengerAge { get; set; }
         public string Status { get; set; } = "CONFIRMED"; // CONFIRMED, CANCELLED
