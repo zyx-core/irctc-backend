@@ -3,13 +3,16 @@ pipeline {
     agent any
 
     environment {
-        IMAGE      = "irctc-api-${BUILD_NUMBER}"
-        NETWORK    = "irctc-net"
-        MYSQL_CONT = "irctc-mysql"
-        API_CONT   = "irctc-api"
 
-        MYSQL_PWD  = "rootpassword"
-        MYSQL_DB   = "irctc"
+        ACR     = 'fullstackacr'
+        RG      = 'fullstack-rg'
+        AKS     = 'fullstack-aks'
+
+        IMAGE   = 'irctc-api'
+
+        AZ_CLIENT_ID     = credentials('azure-client-id')
+        AZ_CLIENT_SECRET = credentials('azure-client-secret')
+        AZ_TENANT_ID     = credentials('azure-tenant-id')
     }
 
     stages {
@@ -20,93 +23,65 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                bat 'docker build -t %IMAGE% .'
-            }
-        }
-
-        stage('Create Network') {
-            steps {
-                bat 'docker network inspect %NETWORK% >nul 2>&1 || docker network create %NETWORK%'
-            }
-        }
-
-        stage('Start MySQL') {
+        stage('Build Image') {
             steps {
                 bat '''
-                docker rm -f %MYSQL_CONT% >nul 2>&1
-
-                docker run -d ^
-                  --name %MYSQL_CONT% ^
-                  --network %NETWORK% ^
-                  -e MYSQL_ROOT_PASSWORD=%MYSQL_PWD% ^
-                  -e MYSQL_DATABASE=%MYSQL_DB% ^
-                  -p 3307:3306 ^
-                  -v mysql-data:/var/lib/mysql ^
-                  mysql:8.0
+                docker build --platform linux/amd64 ^
+                  -t %ACR%.azurecr.io/%IMAGE%:%BUILD_NUMBER% ^
+                  -t %ACR%.azurecr.io/%IMAGE%:latest .
                 '''
             }
         }
 
-        stage('Wait For MySQL') {
+        stage('Login to Azure') {
             steps {
-                bat '''
-                echo Waiting for MySQL to start...
-
-                :retry
-                docker exec %MYSQL_CONT% mysqladmin ping -h localhost -uroot -p%MYSQL_PWD% >nul 2>&1
-
-                if errorlevel 1 (
-                    echo MySQL not ready yet...
-                    timeout /t 5 >nul
-                    goto retry
-                )
-
-                echo MySQL is ready.
-                '''
+                bat 'az login --service-principal -u %AZ_CLIENT_ID% -p %AZ_CLIENT_SECRET% --tenant %AZ_TENANT_ID%'
+                bat 'az acr login -n %ACR%'
             }
         }
 
-        stage('Run API Container') {
+        stage('Push to ACR') {
             steps {
-                bat '''
-                docker rm -f %API_CONT% >nul 2>&1
-
-                docker run -d ^
-                  --name %API_CONT% ^
-                  --network %NETWORK% ^
-                  -e ASPNETCORE_ENVIRONMENT=Development ^
-                  -e ASPNETCORE_URLS=http://+:8080 ^
-                  -e MYSQL_CONNECTION_STRING=Server=%MYSQL_CONT%;Port=3306;Database=%MYSQL_DB%;User=root;Password=%MYSQL_PWD%; ^
-                  -e JWT_ISSUER=irctc-api ^
-                  -e JWT_AUDIENCE=irctc-clone ^
-                  -e JWT_SECRET=change-this-development-secret-at-least-32-characters ^
-                  -e JWT_ACCESS_TOKEN_MINUTES=60 ^
-                  -e JWT_REFRESH_TOKEN_DAYS=30 ^
-                  -e MEDIA_BASE_URL=/media ^
-                  -p 5095:8080 ^
-                  -v api-media:/app/SimpleStorage ^
-                  %IMAGE%
-                '''
+                bat 'docker push %ACR%.azurecr.io/%IMAGE%:%BUILD_NUMBER%'
+                bat 'docker push %ACR%.azurecr.io/%IMAGE%:latest'
             }
         }
 
-        stage('Verify Containers') {
+        stage('Deploy to AKS') {
             steps {
-                bat 'docker ps'
+
+                bat 'az aks get-credentials -n %AKS% -g %RG% --overwrite-existing'
+
+                powershell '''
+                (Get-Content k8s/02-api.yaml) `
+                -replace "<ACR_NAME>", $env:ACR |
+                Set-Content $env:TEMP\\02-api.yaml
+                '''
+
+                bat 'kubectl apply -f k8s/01-mysql.yaml'
+
+                bat 'kubectl apply -f %TEMP%\\02-api.yaml'
+
+                bat 'kubectl set image deployment/irctc-api irctc-api=%ACR%.azurecr.io/%IMAGE%:%BUILD_NUMBER%'
+
+                bat 'kubectl rollout status deployment/irctc-api --timeout=180s'
             }
         }
     }
 
     post {
+
         success {
-            echo 'Deployment completed successfully.'
+            echo "irctc-api ${BUILD_NUMBER} deployed to AKS."
         }
 
         failure {
-            echo 'Deployment failed.'
-            bat 'docker ps -a'
+            echo 'irctc-api pipeline failed.'
+            bat 'kubectl get pods -A'
+        }
+
+        always {
+            bat 'az logout || exit 0'
         }
     }
 }
